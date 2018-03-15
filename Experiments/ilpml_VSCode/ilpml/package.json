@@ -1,0 +1,26 @@
+{
+    "name": "ilpml",
+    "displayName": "ilpml",
+    "description": "Fournit la coloration syntaxique pour les fichiers ilpml",
+    "version": "0.0.1",
+    "publisher": "Blank",
+    "engines": {
+        "vscode": "^1.21.0"
+    },
+    "categories": [
+        "Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "ilpml",
+            "aliases": ["ilpml", "ilpml"],
+            "extensions": [".ilpml"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "ilpml",
+            "scopeName": "source.ilpml",
+            "path": "./syntaxes/ilpml.tmLanguage.json"
+        }]
+    }
+}

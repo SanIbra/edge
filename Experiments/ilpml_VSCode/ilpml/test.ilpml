@@ -1,0 +1,23 @@
+let something = probleme in
+(
+    if true then
+    (
+        //Comment
+        /*
+        CommentBlock
+        */
+        false
+    )
+)
+
+if then else let and in
+true
+false
+//CommentLine
+/*
+    CommentBlock
+*/
+"String\""
+variable = 1246524 + .145465
+0.1 + 212 * 54 - 54
+ident01

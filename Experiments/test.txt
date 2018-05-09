@@ -1,0 +1,10 @@
+name : #name ;
+extension : #extension ;
+keywords : #word , #word2 ;
+constants : #true , #false ;
+operators : #: , #, , #; ;
+idents : #REGEX ;
+numbers : #REGEX2 ;
+peers : #ouvrante #fermante ;
+commentLine : #Symbole ;
+commentBlock : #REGEXDebut #REGEXfin

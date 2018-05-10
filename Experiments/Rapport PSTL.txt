@@ -1,0 +1,68 @@
+Rapport PSTL
+
+Introduction
+  Tous les jours des nouveaux langages de programmation sont créés. Or les éditeurs de texte ne proposent pas d'aide permettant d'écrire des programmes du langage créer plus facilement. Comme de la coloration syntaxique, indentation automatique etc. En général le créateur du langage va créer un mode dans l’éditeur de texte qui utilise. Mais si une autre personne veut réutiliser le langage et qu’il n’utilise pas le même éditeur alors il va pas devoir « recréer » un autre plugin adapter à son éditeur de texte. 
+  Dans ce cas ils suffiraient de créer un plugin des éditeurs de texte qui s’adapte au langage créer. Or cela n'est pas possible car ils existent de nombreux éditeurs de texte et ils ont tous des manières différentes de créer des extensions. 
+  C'est là que Edge intervient. Le but de EDGE est qu’à partir d'une grammaire du langage, on puisse créer des plugins adapter aux éditeurs de texte de l’utilisateurs.
+Pour cela nous avons d’abord étudier trois éditeurs de texte pour étudier comment sont créer les plugins. Ensuite de cela on a déduit une grammaire qui permettra à notre générateur de plugin de créer les modes.
+Les 3 éditeur des textes choisit sont Emacs car impose par un de nos encadrants Vim car très connu et aussi utilise par un de nos encadrant et VSCode car différents des deux autres.
+Le générateur sera lui écrit en haskell. Ce qui nous a permis de découvrir un nouveau langage de programmation.
+
+
+I Editeur de texte:
+   Dans un premier temps nous avons essayé de créer une extension pour un langage quelconque sur chaque éditeur de texte.
+    1)GNU Emacs
+       GNU Emacs est un éditeur de texte créer en 1984 qui dérive de Emacs. 
+        Les extensions en Emacs sont appelées mode.
+        Il y a deux catégories de mode les modes majeurs et les modes mineur.
+        La différence est qu’un seul mode majeur peut être activer à la fois alors que plusieurs modes mineurs peuvent être actifs en même tps en parallèle d'un mode majeur.
+        Les modes mineur rajoute en générale une petite fonctionnalité en plus alors que le mode majeur ajoute des fonctionnalités qui peuvent modifier tous les buffers.
+        Ici nous allons faire un majeur mode car ils modifient totalement la façon dont le texte sera affiché.
+        Pour créer un mode, Emacs a son propre langage appelé Emacs lisp.
+- coloration syntaxique :elle se définit par mettre les mots spécifique du langages a
+      
+  /*Description des fichier permettant le .el de fonctionner*/
+
+    2)Vim
+     Vim est un éditeur de texte créer en 1991 qui dérive de Vi .
+Les extensions en Vim sont appelées plugins. Un plugin est un répertoire qui contiennent des sous répertoires qui ont des fichiers décrivant les plugins en Vimscript.
+
+  /*Description des fichier permettant le pulging in de fonctoinner*/
+
+VSCode 
+Les extensions en VSCode sont appelé extension écrit en json. VS Code contient un générateur d’extension. Un code Json décrit le system. 3 fichier sont nécessaire pour créer l’extension sur le langage : un fichier décrivant la syntaxe  du langage , un opération qui gere let dernière .
+  /*Description des 3 fichier */
+(comparaison des modes)
+	Emacs	Vim	VSCode
+Coloration Syntaxique	ok	ok	ok
+Code Folding		ok	@
+Commentaire	ok	@	ok
+Closing parenthese		ok	@
+Indentation		ok	@
+keyMap	ok	ok	no
+
+
+
+
+
+
+II Création de EDGE :
+Maintenant que nous savons crée une extension pour chacun des éditeurs de texte. Nous avons réuni toutes les informations nécessaires du langage pour les créer.
+De là, on a créé une grammaire adapter pour collecter les infos nécessaires.
+Grammaire de EDGE:
+ name : #name ;
+extension : #extension ;
+keywords : #word , #word2 ;
+constants : #true , #false ;
+operators : #: , #, , #; ;
+idents : #REGEX ;
+numbers : #REGEX2 ;
+peers : #ouvrante #fermante ;
+commentLine : #Symbole ;
+commentBlock : #REGEXDebut #REGEXfin
+A partie de cette grammaire, nous avons créé un lexer et un parseur pour le langage.
+ 
+
+
+
+

@@ -2,15 +2,17 @@
 (add-to-list 'auto-mode-alist '("\\.ilpml\\'" . ilp9-mode))
 
 
+;Permet de faire le keyBinding 
 (defvar ilp-mode-map
   (let ((ilp-mode-map (make-keymap)))
-    (define-key ilp-mode-map "\C-j" 'newline-and-indent)
+    (define-key ilp-mode-map "\C-j" 'newline-and-indent); la commande CTRL+J va appliquer la fonction newligne-and-indent
+    (define-key ilp-mode-map "\C-x\C-a\C-a" 'fold_region); la commande CTRL+X,CTRL+A,CTRL+A va appliquer la fonction fold_region
     ilp-mode-map)
   "Keymap for WPDL major mode")
 
 
 ;Coloration syntaxique
-(defconst ilp-font-lock-keywords1
+(defvar ilp-font-lock-keywords1
   (list
    ; These define the beginning and end of each ILP entity definition
    '("\\<\\(let\\|if\\|then\\|in\\)\\>" . font-lock-keyword-face)
@@ -18,6 +20,15 @@
    '("[a-zA-Z_][a-zA-Z0-9_]*" . font-lock-variable-name-face)))
 
 (setq ilp-font-lock-keywords ilp-font-lock-keywords1)
+
+(defun  indenttest()
+  "fonction de test"
+   (interactive)
+   (insert (number-to-string (- (ElemInLine "(") (ElemInLine ")")))))
+
+(setq openIdent "\\(let\\|(\\)")
+(setq closeIdent ")")
+
 
 ;Indentation automatique
 (defun ElemInLine(elem)
@@ -27,37 +38,20 @@
      (end-of-line)
      (setq end (point))
      (beginning-of-line)
-     (search-forward elem)
+     (setq prec (point))
+     (re-search-forward elem nil t)
      
-     (while (<= (point) end)
+     (while (and (<= (point) end) (not (equal prec (point)))  )
        (setq occ (+ occ 1))
-       (search-forward elem)
+       (setq prec (point))
+       (re-search-forward elem nil t)
        )	        
      (+ occ 0)))	;juste pour le valeur de retour de la foonction   
 
 
-(defun ElemIn (elem start end)
-  "Compte le nombre d'element entre start et end"
-    (setq occ 0)
-   (save-excursion
-     (goto start)
-     (search-forward elem)
-     
-     (while (<= (point) end)
-       (setq occ (+ occ 1))
-       (search-forward elem)
-       )	        
-     (+ occ 0)))
-
 (defun  indentnv()
-  "Retourne la difference enntre le nombres de parenthese ouvrante et fermant"
-  (- (ElemInLine "(") (ElemInLine ")"))
-  )
-
-(defun  indenttest()
-  "fonction de test"
-   (interactive)
-   (insert (number-to-string (- (ElemInLine "(") (ElemInLine ")"))))
+  "Retourne la difference entre le nombres de parenthese ouvrante et fermant"
+  (- (ElemInLine openIdent) (ElemInLine closeIdent))
   )
 (defun ilp-indent-line ()
   "Fonction responsable de l'indentation"
@@ -87,15 +81,6 @@
 	     );fin while
 	   );fin save-excursion
 
-	 "cas ou il y a une parenthese fermante sur la ligne"
-					; (if (< (indentnv) 0)
-					;  (setq cur-indent (- cur-indent default-tab-width))
-	 (save-excursion
-	   (beginning-of-line)
-	   (if (looking-at "^\s*)$")
-	       (progn
-		 (setq cur-indent (- cur-indent default-tab-width)))))
-	 
 	 (if (< cur-indent 0)
 	     (indent-line-to 0)
 	   (indent-line-to cur-indent))))))
@@ -104,13 +89,16 @@
 (defvar ilp-mode-syntax-table
   (let ((ilp-mode-syntax-table (make-syntax-table)))
 	
-    ; This is added so entity names with underscores can be more easily parsed
+        ;permet l'ajout de _ comment faisant partie d'un mots
 	(modify-syntax-entry ?_ "w" ilp-mode-syntax-table)
 	
-	; Comment styles are same as C++
+	;Definition des commentaire 
 	(modify-syntax-entry ?/ ". 124b" ilp-mode-syntax-table)
+	   ; indique que le / fait partie est soit en 1er position ou deuxieme position d'un symbole ouvrant le commentaire(12) soit en 2ème position d'un symbole fermant la parenthèse
 	(modify-syntax-entry ?* ". 23" ilp-mode-syntax-table)
+	   ; indique que * est soit en deuxime position d'un symbole ouvrant le commmentaire(2) soit en 1er position d'un symbole fermant le commentaire(3)
 	(modify-syntax-entry ?\n "> b" ilp-mode-syntax-table)
+	  ;indique q'un retour a la ligne signal la fin d'un commentaire ligne
 	ilp-mode-syntax-table)
   "Syntax table for wpdl-mode")
 
@@ -193,33 +181,6 @@
     (setq start (point)))
   (delete-overlay (car (overlays-in start (point-max)))))
 
-
-(defun fold_region()
-  "cache la prochaine zone"
-  (interactive)
-  (setq depart 0)
-  (setq arrive 0)
-  (save-excursion
-    (beginning-of-line)
-    (setq begin (point))
-    (when (search-forward "(" nil t)
-      (setq depart (point))
-      (let ((bool 1) (fini t))
-	(while fini
-	  (search-forward ")" nil t)
-	  (if (eq (fermante begin (point)) 0)
-	      (progn
-		(setq arrive (point))
-		(setq fini nil))
-	    (setq bool 0));traitement de la parenthese fermante
-	  
-	  (if (bobp)
-	      (setq fini nil)))))) ;fin while et let et when et save excursion
-  
-  (unless (eq depart arrive)
-    (unless (eq arrive 0)
-      (hide_region depart arrive)))
-  (+ arrive 0))
 
 
 (provide 'ilp9-mode)

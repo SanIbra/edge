@@ -1,0 +1,57 @@
+
+;Indentation automatique
+
+(defun  indentnv()
+  "Retourne la difference entre le nombres de parenthese ouvrante et fermant"
+  (- (ElemInLine openIdent) (ElemInLine closeIdent))
+  )
+  
+(defun ElemInLine(elem)
+"Return number of elem in the current line"
+   (setq occ 0)
+   (save-excursion
+     (end-of-line)
+     (setq end (point))
+     (beginning-of-line)
+     (setq prec (point))
+     (re-search-forward elem nil t)
+     
+     (while (and (<= (point) end) (not (equal prec (point)))  )
+       (setq occ (+ occ 1))
+       (setq prec (point))
+       (re-search-forward elem nil t)
+       )	        
+     (+ occ 0)))	;juste pour le valeur de retour de la foonction   
+
+  
+(defun my-indent-line ()
+  "Fonction responsable de l'indentation"
+   (interactive)
+   (beginning-of-line)
+   (if (bobp)
+       (indent-line-to 0)
+     (progn
+       "recheche du niveau d'indentation"
+       (let ((not-indented t) (cur-indent 0))
+	 (save-excursion
+	   (while not-indented
+	     (forward-line -1)
+	     (setq nvid (indentnv))
+	     (if (< nvid 0)
+		 (progn
+		   (setq cur-indent  (- (current-indentation) default-tab-width))
+		   (setq not-indented nil))
+	       
+	       (if (> nvid 0)
+		   (progn
+		     (setq cur-indent (+ (current-indentation) default-tab-width))
+		     (setq not-indented nil))) 
+	       );fin if
+	     (if (bobp)
+		 (setq not-indented nil))
+	     );fin while
+	   );fin save-excursion
+
+	 (if (< cur-indent 0)
+	     (indent-line-to 0)
+	   (indent-line-to cur-indent))))))

@@ -4,13 +4,13 @@
 Editor Mode Generator est un generateur de mode pour editeur de texte.
 
 Mais qu'est ce qu'un mode?
-Un mode est un parametrage de votre editeur de texte qui adapte l'editeur a pour un langage donné.
-Par exemple un mode pour C permet de mettre les mots clés (commme int if while) en couleur, identer la prochaine ligne si il y a un { etc.
+Un mode est un parametrage de votre editeur de texte qui adapte l'éditeur à un langage donné.
+Par exemple un mode pour C, permet de mettre les mots clés (commme int if while) en couleur, indenter la prochaine ligne si il y a un { etc.
 
 
 Interet de EDGE.
-L'écriture des modes est assez fastidieux et diffère enormement d'un éditeur de texte a un autre. De ce fait, les "petits" langage ne beneficient pas de mode pour tous les editeurs de textes. 
-EDGE a pour vocation d'unifier la création de mode. Pour cela il aura besoin d'une description simple du langage (decrite plus tard).Le but est de construire un mode simple comportant les fonctionnalités de base qui pourra être modifiable par l'utilisateur.
+L'écriture des modes est assez fastidieux et diffère enormement d'un éditeur de texte à un autre. De ce fait, les "petits" langage ne beneficient pas de mode pour tous les editeurs de textes. 
+EDGE a pour vocation d'unifier la création de mode. Le but est de construire un mode simple comportant les fonctionnalités de base qui pourra être modifiable par l'utilisateur. Pour cela EDGE aura besoin d'une description simple du langage (décrite plus tard)
 
 
 Pour l'instant EDGE peut créer des modes pour emacs, vim et vscode.

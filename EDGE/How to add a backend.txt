@@ -1,0 +1,19 @@
+To add a backend to EDGE :
+
+1) All the informations you need are already given by the descriptor :
+
+Create a .hs file in the Mode folder with a function that will return a list of "ToGenerate" (cf. Generateur.FileGenerator) and take a Stats as parameter (cf. Parseur.TypeStats).
+
+If you have to use a Regex, create the functions you need in Parseur.Regex.
+
+
+2) You need some information that is not given by the descriptor :
+
+Change the AST structure in the Parseur.DataStructAST file to create nodes for the information you want to stock.
+
+Change the Stats type to stock the information in it (Parseur.TypeStats file).
+
+Implement the functions you need in the Parseur.ParseEdge file to parse the new grammar and the extract function for your information.
+
+Now the information you need can be given by the descriptor.
+Go to n°1.

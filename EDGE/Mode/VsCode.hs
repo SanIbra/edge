@@ -1,8 +1,10 @@
 module Mode.VsCode where
+
 import Parseur.TypeStats
-import FileGenerator
 import Parseur.Regex
+import Generateur.FileGenerator
       
+-- beginning of the syntax file
 debutVSC :: Stats -> String
 debutVSC stats = "{\n"
   ++ "\t\"$schema\": \"https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json\",\n"
@@ -10,10 +12,11 @@ debutVSC stats = "{\n"
   ++ "\t\"patterns\": [\n"
   ++ "\t\t{\n"
   ++ "\t\t\t\"include\": \"#code\"\n"
-  ++ "\t\t\n}\t\n],\n"
+  ++ "\t\t}\n\t],\n"
   ++ "\t\"repository\": {\n"
-  ++ "\t\t\"code\":\n  {\n"
-  ++ "\t\t\t\"patterns\": [\n    {\n"
+  ++ "\t\t\"code\":\n\t\t{\n"
+  ++ "\t\t\t\"$comment\": \"the patterns attribut of code include all of the syntax objects\",\n"
+  ++ "\t\t\t\"patterns\": [\n\t\t\t\t{\n"
   ++ "\t\t\t\t\t\"include\": \"#keywords\"\n"
   ++ "\t\t\t\t},\n\t\t\t\t{\n"
   ++ "\t\t\t\t\t\"include\": \"#commentLine\"\n\t\t\t\t},\n\t\t\t\t{\n"
@@ -25,16 +28,20 @@ debutVSC stats = "{\n"
   ++ "\t\t\t\t\t\"include\": \"#operators\"\n\t\t\t\t}\n\t\t\t]\n\t\t},\n"
   where name = head (getName stats)
 
+-- last line of the syntax file
 finVSC :: Stats -> String
 finVSC stats = "},\"scopeName\": \"source."++ name ++"\"}\n" where name = head (getName stats)
 
+-- transform a String to its equivalent in a Regex in VSCode
 regex::String->String
 regex x = toVSCode (fromStringtoReg (fromSymboltoString x))
 
+-- call regex on each string in the list in parameter and put sep between them
 reg::[String]->String->String
 reg (x:[]) sep=regex x
 reg (x:xs) sep=(regex x)++sep++(reg xs sep)
 
+-- return the keywords JSON object
 keywords :: Stats -> String
 keywords stats = 
   "\"keywords\": {\n"
@@ -45,6 +52,7 @@ keywords stats =
     name = head (getName stats)
     kw = reg (getKeyword stats) "|"
 
+-- return the constants JSON object
 constants::Stats -> String
 constants stats= "\"constantsChar\": {\n"
   ++ "\"patterns\": [\n    {\n"
@@ -54,6 +62,7 @@ constants stats= "\"constantsChar\": {\n"
     name = head (getName stats)
     cts = reg (getConstant stats) "|"
 
+-- return the operators JSON object
 operators:: Stats -> String
 operators stats= "\"operators\": {\n"
   ++ "\"patterns\": [\n    {\n"
@@ -62,7 +71,8 @@ operators stats= "\"operators\": {\n"
   where 
     name = head (getName stats)
     op = reg (getOperateur stats) "|"
-      
+     
+-- return the idents JSON object 
 idents:: Stats -> String
 idents stats= "\"idents\": {\n"
   ++ "\"patterns\": [\n    {\n"
@@ -70,9 +80,10 @@ idents stats= "\"idents\": {\n"
   ++ "    \"match\": \""++ id ++ "\"\n    }\n  ]\n}\n"
   where
     name = head (getName stats)
-    id = toVSCode (RE (head (getIdent stats)))
+    id = toVSCode (head (getIdent stats))
 
 
+-- return the constantsNum JSON object
 numbers::Stats -> String
 numbers stats= " \"constantsNum\": {\n"
   ++ "\"patterns\": [\n    {\n"
@@ -80,8 +91,9 @@ numbers stats= " \"constantsNum\": {\n"
   ++ "    \"match\": \""++ int ++"\"\n    }\n  ]\n}\n"
   where
     name = head (getName stats)
-    int = toVSCode (RE (head (getInt stats)))
-       
+    int = toVSCode (head (getInt stats))
+     
+-- return the commentLine JSON object  
 commentLines::Stats -> String
 commentLines stats= "\"commentLine\": {\n"
   ++ "\"patterns\": [\n    {\n"
@@ -91,6 +103,7 @@ commentLines stats= "\"commentLine\": {\n"
     name = head (getName stats)
     cl = toVSCode (fromStringtoReg (head (getCommentLine stats)))
      
+-- return the commentBlock JSON object
 commentBlocks::Stats -> String
 commentBlocks stats= "\"commentBlock\": {\n"
   ++ "\"patterns\": [\n    {\n"
@@ -102,6 +115,7 @@ commentBlocks stats= "\"commentBlock\": {\n"
     cb1 = toVSCode (fromStringtoReg (fst (head (getCommentBlock stats))))
     cb2 = toVSCode (fromStringtoReg (snd (head (getCommentBlock stats))))
 
+-- return the strings JSON object (always the same)
 string:: String
 string = "\"strings\": {\n"
   ++ "    \"name\": \"string.quoted.double.ilpml\",\n"
@@ -113,6 +127,7 @@ string = "\"strings\": {\n"
   ++ "        \"match\": \"\\\\.\"\n"
   ++ "      }     ]    }\n"
         
+-- middle of the syntax file
 millieuVSC ::Stats -> String
 millieuVSC stats = 
   string
@@ -127,11 +142,12 @@ millieuVSC stats =
     kw = if (head (getKeyword stats)) /= "" then ","++(keywords stats) else ""
     cts = if (head (getConstant stats)) /= "" then ","++(constants stats) else ""
     op = if (head (getOperateur stats)) /= "" then ","++(operators stats) else ""
-    id = if (head (getIdent stats)) /= "" then ","++(idents stats) else ""
-    int = if (head (getInt stats)) /= "" then ","++(numbers stats) else ""
+    id = if (toVSCode (head (getIdent stats))) /= "" then ","++(idents stats) else ""
+    int = if (toVSCode (head (getInt stats))) /= "" then ","++(numbers stats) else ""
     cl = if (head (getCommentLine stats)) /= "" then ","++(commentLines stats) else ""
     cb = if (fst (head (getCommentBlock stats))) /= "" then ","++(commentBlocks stats) else ""
  
+-- Declaration of the Comments patterns in the language-configuration.json file
 configComment::Stats -> String
 configComment stats = 
   "\t\"comments\": {\n"
@@ -144,10 +160,12 @@ configComment stats =
     cb1 = fst (head (getCommentBlock stats))
     cb2 = snd (head (getCommentBlock stats))
 
+-- return a string representing the peers in a list
 configPeers::[(String,String)]->String
 configPeers (x:[])= "\t\t[\""++ fromSymboltoString (fst x) ++"\",\""++ fromSymboltoString (snd x) ++"\"],\n"
 configPeers (x:xs)= "\t\t[\""++ fromSymboltoString (fst x) ++"\",\""++ fromSymboltoString (snd x) ++"\"],\n"++(configPeers xs)
 
+-- contents of the language-configuration.json file
 congif::Stats -> String
 congif stats= "{" 
   ++ configComment stats
@@ -170,8 +188,9 @@ congif stats= "{"
     peers = configPeers (getPaire stats)
     cb = if (fst(head (getCommentBlock stats))) /= "" then configPeers (getCommentBlock stats) else "" 
 
+-- contents of the package.json file
 package::Stats -> String
-package stats= "{  \"name\": \""++ name ++"\",\n"
+package stats= "{\n  \"name\": \""++ name ++"\",\n"
     ++ "  \"displayName\": \""++ name ++"\",\n"
     ++ "  \"description\": \"Fournit la coloration syntaxique pour les fichiers "++ name ++"\",\n"
     ++ "  \"version\": \"0.0.1\",\n"
@@ -188,22 +207,22 @@ package stats= "{  \"name\": \""++ name ++"\",\n"
     ++ "    \"grammars\": [{\n"
     ++ "        \"language\": \""++ name ++"\",\n"
     ++ "        \"scopeName\": \"source."++ name ++"\",\n"
-    ++ "      \"path\": \"./syntaxes/"++ name ++".tmLanguage.json\"\n       }]\n    }\n}\n"
+    ++ "      \"path\": \"./syntaxs/"++ name ++".tmLanguage.json\"\n       }]\n    }\n}\n"
     where
       name = head (getName stats)
       ext = head (getExtension stats)
 
-
+-- main function (function called)
 vsCodeExtension::Stats -> [ToGenerate]
 vsCodeExtension stats=
   [
     Folders [
       "vsCode",
       "vsCode/"++ name,
-      "vsCode/"++ name ++"/syntaxes"
+      "vsCode/"++ name ++"/syntaxs"
     ],
     File ("vsCode/"++ name ++"/language-configuration.json", congif stats),
-    File ("vsCode/"++ name ++"/syntaxes/"++ name ++".tmLanguage.json", (debutVSC stats) ++ (millieuVSC stats) ++ (finVSC stats)),
+    File ("vsCode/"++ name ++"/syntaxs/"++ name ++".tmLanguage.json", (debutVSC stats) ++ (millieuVSC stats) ++ (finVSC stats)),
     File ("vsCode/"++ name ++"/package.json", package stats)
   ]
   where

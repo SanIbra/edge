@@ -2,7 +2,7 @@ module Mode.EmacsIndent where
 indentfunction= ";Indentation automatique\n\
 \    (defun  indentnv()\n\
 \      \"Retourne la difference entre le nombres de parenthese ouvrante et fermant\"\n\
-\      (- (ElemInLine openIdent) (ElemInLine closeIdent))\n\
+\      (- (ElemInLine openIndent) (ElemInLine closeIndent))\n\
 \      )\n\
 \      \n\
 \    (defun ElemInLine(elem)\n\

@@ -1,7 +1,9 @@
 module Mode.Emacs where
+    
 import Parseur.TypeStats
 import Mode.EmacsIndent
-import FileGenerator
+import Parseur.Regex
+import Generateur.FileGenerator
 
 emacskeyword key= "\\\\<\\\\("++(createRegex key)++"\\\\)\\\\>"
 createRegex (k:[]) =k
@@ -23,7 +25,7 @@ emacsMode stat =
 headFile::Stats->String
 headFile stat=
     ";;Commande a ajouter dans le .emacs pour que le mode se charge automatiquement à l'ouverture de emacs\n"
-      ++";;(autoload '"++nom++"-mode \"chemin du mode.el\" \""++nom++" Mode editing\" t\n)"
+      ++";;(autoload '"++nom++"-mode \"chemin du mode.el\" \""++nom++" Mode editing\" t)\n"
       ++";;(add-to-list 'auto-mode-alist '(\"\\\\"++ext++"\\\\'\" . "++nom++"-mode)) \n" 
   where nom=head(getName stat)
         ext=head(getExtension stat)
@@ -34,23 +36,23 @@ codeFolding stat=
         then 
             ""
         else
-            ";Pour le code folding utilisation du outline mode"
-            ++"(require 'outline)\n(setq outline-regex openIdent)\n\n"
+            ";Pour le code folding utilisation du outline mode\n"
+            ++"(require 'outline)\n(setq outline-regex openIndent)\n\n"
     where paire=(getPaire stat)
 
 coloration::Stats->String
 coloration stat =
     "\n;Responsable de la coloration syntaxique\n"
       ++"(defconst "++nom++"-font-lock-keywords1(list\n"--description des keywords\n"
-        ++ if ((head kw)=="") then "" else  ("  '(\""++(emacskeyword kw)++"\". font-lock-keyword-name-face)\n")
-        ++ if ((head cts)=="") then "" else  ("  '(\""++(emacskeyword cts)++"\". font-lock-constant-face)\n")
-        ++ if ((head id)=="") then "" else ("  '(\""++(head id)++"\". font-lock-variable-name-face)\n")
-        ++ "))"
-        ++ "(setq "++nom++"-font-lock-keywords "++nom++"-font-lock-keywords1)"
+        ++ if ((head kw)=="") then "" else  ("  '(\""++(emacskeyword kw)++"\" . font-lock-keyword-face)\n")
+        ++ if ((head cts)=="") then "" else  ("  '(\""++(emacskeyword cts)++"\" . font-lock-constant-face)\n")
+        ++ if ( id =="") then "" else ("  '(\""++id ++"\" . font-lock-variable-name-face)\n")
+        ++ "))\n"
+        ++ "(setq "++nom++"-font-lock-keywords "++nom++"-font-lock-keywords1)\n"
   where nom=head (getName stat)
         kw=(getKeyword stat)
         cts=(getConstant stat)
-        id=(getIdent stat)
+        id=toEmacs (head (getIdent stat))
 
 
 keymapping::Stats->String
@@ -103,9 +105,9 @@ commentLines::Stats->String
 commentLines stat=
     (if ( (comment (cl!!0) cl (fst cb) (snd cb) 1) =="")
         then ""
-        else ("    (modify-syntax-entry ?"++((cl!!0):[])++" \". "++(comment (cl!!0) cl (fst cb) (snd cb) 1)++  " \" "++nom++"-mode-syntax-table)"))
-      ++ ("    (modify-syntax-entry ?"++((cl!!1):[])++" \". "++(comment (cl!!1) cl (fst cb) (snd cb) 0)++  "b\" "++nom++"-mode-syntax-table)")
-      ++ ("    (modify-syntax-entry ?\\n \"> b\" "++nom++"-mode-syntax-table)")
+        else ("    (modify-syntax-entry ?"++((cl!!0):[])++" \". "++(comment (cl!!0) cl (fst cb) (snd cb) 1)++  " \" "++nom++"-mode-syntax-table)\n"))
+      ++ ("    (modify-syntax-entry ?"++((cl!!1):[])++" \". "++(comment (cl!!1) cl (fst cb) (snd cb) 0)++  "b\" "++nom++"-mode-syntax-table)\n")
+      ++ ("    (modify-syntax-entry ?\\n \"> b\" "++nom++"-mode-syntax-table)\n")
   where nom=head(getName stat)
         cl=head(getCommentLine stat)
         cb=head(getCommentBlock stat)
@@ -147,8 +149,8 @@ indentation::Stats->String
 indentation stat=
     if (fst(head paire))/=""
         then do 
-        ( ("(setq openIdent \"\\\\("++(createRegex (map fst paire))++")\")")
-         ++ ("(setq closeIdent \"\\\\("++(createRegex (map snd paire))++")\")")
+        ( ("(setq openIndent \"\\\\("++(createRegex (map fst paire))++"\\\\)\")\n")
+         ++ ("(setq closeIndent \"\\\\("++(createRegex (map snd paire))++"\\\\)\")\n")
          ++ indentfunction)
         else
          ""
@@ -156,17 +158,16 @@ indentation stat=
 
 fin::Stats->String
 fin stat=
-    "(setq "++nom++"-font-lock-keywords "++nom++"-font-lock-keywords1)"
-      ++"\n(defun "++nom++"-mode ()\n(interactive)\n(kill-all-local-variables)"
-      ++"(set  (make-local-variable 'font-lock-defaults) '("++nom++"-font-lock-keywords))"
-      ++"(use-local-map "++nom++"-mode-map)"
-      ++"(set-syntax-table "++nom++"-mode-syntax-table)" 
-      ++"(setq major-mode '"++nom++"-mode)"
-      ++"(setq mode-name \""++nom++"\")"
+      "\n(defun "++nom++"-mode ()\n(interactive)\n(kill-all-local-variables)\n"
+      ++"(set  (make-local-variable 'font-lock-defaults) '("++nom++"-font-lock-keywords))\n"
+      ++"(use-local-map "++nom++"-mode-map)\n"
+      ++"(set-syntax-table "++nom++"-mode-syntax-table)\n" 
+      ++"(setq major-mode '"++nom++"-mode)\n"
+      ++"(setq mode-name \""++nom++"\")\n"
       ++(if (fst(head paire))/= ""
-          then  " (set (make-local-variable 'indent-line-function) 'my-indent-line) "
+          then  " (set (make-local-variable 'indent-line-function) 'my-indent-line)\n "
           else "")
-      ++"(run-hooks '"++nom++"-mode-hook))"
-      ++"(provide '"++nom++"-mode)"
+      ++"(run-hooks '"++nom++"-mode-hook))\n"
+      ++"(provide '"++nom++"-mode)\n"
     where nom=head (getName stat)
           paire=(getPaire stat)

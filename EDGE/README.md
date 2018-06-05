@@ -5,12 +5,12 @@ Editor Mode Generator est un generateur de mode pour editeur de texte.
 
 Mais qu'est ce qu'un mode?
 Un mode est un parametrage de votre editeur de texte qui adapte l'editeur a pour un langage donné.
-Par exemple un mode pour C permet de mettre les mots clés (comme int if while) en couleur, indenter la prochaine ligne si il y a un { etc.
+Par exemple un mode pour C permet de mettre les mots clés (commme int if while) en couleur, identer la prochaine ligne si il y a un { etc.
 
 
 Interet de EDGE.
-L'écriture des modes est assez fastidieux et diffère enormement d'un éditeur de texte à un autre. De ce fait, les "petits" langage ne beneficient pas de mode pour tous les editeurs de textes. 
-EDGE a pour vocation d'unifier la création de mode. Le but est de construire un mode simple comportant les fonctionnalités de base qui pourra être modifiable par l'utilisateur. Pour cela il aura besoin d'une description simple du langage (décrite plus tard).
+L'écriture des modes est assez fastidieux et diffère enormement d'un éditeur de texte a un autre. De ce fait, les "petits" langage ne beneficient pas de mode pour tous les editeurs de textes. 
+EDGE a pour vocation d'unifier la création de mode. Pour cela il aura besoin d'une description simple du langage (decrite plus tard).Le but est de construire un mode simple comportant les fonctionnalités de base qui pourra être modifiable par l'utilisateur.
 
 
 Pour l'instant EDGE peut créer des modes pour emacs, vim et vscode.
@@ -44,7 +44,7 @@ Le mode VsCode necessite la version 1.22.2 ou plus pour fonctionne telechargeabl
 
 ## Fonctionnement
 Il faut dans un premier temps créer le fichier .edge qui decrit la syntaxe de votre langage.
-comme dans l'exemple ci-dessous.
+commme dans l'exemple ci-dessous.
 
 ```
 name : #name ;
@@ -77,20 +77,16 @@ commentBlock : #/* #*/
 ATTENTION: les mots clés sont tous separes par des espaces et tous les champs doivent etre renseignes
 ### Generation du mode
 
-lancer le ghci sur votre console
+Compiler le generateur
 ```
-ghci
+ghc -o gen EdgeGen.hs
 ```
   
-charge le edge
-```
-:l EDGE.hs
-```
 
 generer le mode:
 
 ```
-edgeGen "descripeur" "mode"
+edgeGen descripeur -option op1
 ```
 
 Remplacer descripeur par le chemin du fichier descripteur et le mode par le mode que vous voulez generer.
@@ -98,11 +94,16 @@ Remplacer descripeur par le chemin du fichier descripteur et le mode par le mode
 Vous pouvez afficher les modes generable avec la commande :
 
 ```
-listMode
+gen -listMode
 ```
 Pour l'instant seul les modes de emacs vim et vscode peuvent etre generer.
  
 Voila votre mode est generer il suffit maintenant l'installer sur votre editeur preferer.
+
+
+Option
+-only m: genere seulement le mode m
+-base c: genere les modes avec c comme base en plus du descripteur (il y a ocaml c et python comme base disponible )
 
 ### Installation de mode
 

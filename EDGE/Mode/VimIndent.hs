@@ -1,16 +1,18 @@
 module Mode.VimIndent where
 import Parseur.Regex
-import FileGenerator
 import Parseur.TypeStats
 
+-- Special string only used during the generation of the indent file
 regexindent::[(String,String)]->String
 regexindent (x:[])=(fst x)++"[^"++(snd x)++"]*"
 regexindent (x:xs)=(fst x)++"[^"++(snd x)++"]*\\|"++(regexindent xs) 
 
+-- Same as vimprint in Vim.hs
 listfermante::[String]->String
 listfermante (x:[])=x
 listfermante (x:xs)=x++","++(listfermante xs)
   
+-- String of the beginning of the file (no information needed here)
 debutIndent::String
 debutIndent = "if exists(\"b:did_indent\")\n"
   ++ "  finish\n"
@@ -25,6 +27,7 @@ debutIndent = "if exists(\"b:did_indent\")\n"
   ++ "  finish\n"
   ++ "endif\n"
   ++ "\n"
+  ++ "\" indent function\n"
   ++ "function! MyIndent(lnum)\n"
   ++ "\tif has('syntax_items')\n"
   ++ "\t\tlet prevlinenum = s:get_last_normal_line(a:lnum - 1)\n"
@@ -32,7 +35,7 @@ debutIndent = "if exists(\"b:did_indent\")\n"
   ++ "\t\t\treturn -1\n"
   ++ "\t\tendif\n"
   ++ "\t\t\n"
-  ++ "\t\tlet line = s:get_line_trimmed(a:lnum) \"line without comment and undesirable spaces\n"
+  ++ "\t\tlet line = s:get_line_trimmed(a:lnum)\n"
   ++ "\n"
   ++ "\t\tlet matchlinenum = s:get_matching_line(line, a:lnum)\n"
   ++ "\n"
@@ -50,10 +53,12 @@ debutIndent = "if exists(\"b:did_indent\")\n"
   ++ "\treturn -1\n"
   ++ "endfunction\n"
   ++ "\n"
+  ++ "\" return true if the object line lnum and column col is a comment\n"
   ++ "function! s:is_comment(lnum, col)\n"
-  ++ "\treturn s:synthax_name(a:lnum, a:col) =~ \"Comment\"\n"
+  ++ "\treturn s:syntax_name(a:lnum, a:col) =~ \"Comment\"\n"
   ++ "endfunction\n"
   ++ "\n"
+  ++ "\" return the number of the last line that's not a blanck line or a comment only line"
   ++ "function! s:get_last_normal_line(lnum)\n"
   ++ "\tlet curlinenum = a:lnum\n"
   ++ "\n"
@@ -68,6 +73,7 @@ debutIndent = "if exists(\"b:did_indent\")\n"
   ++ "\treturn 0\n"
   ++ "endfunction\n"
   ++ "\n"
+  ++ "\" analysing function for the search_pair function\n"
   ++ "function! s:analyse_ligne(rbegin, rend, line, score)\n"
   ++ "\tif a:score == 0\n"
   ++ "\t\treturn 0\n"
@@ -83,13 +89,14 @@ debutIndent = "if exists(\"b:did_indent\")\n"
   ++ "\treturn a:score\n"
   ++ "endfunction\n\n"
 
-
+-- main function (function called)
 writeIndent::Stats->String
 writeIndent stats =
   debutIndent
   ++ "setlocal indentkeys+="++(listfermante (map snd peers))++"\n"
   ++ "let s:INDENT_AFTER_PAIRED_SYMBOL='^.*\\("++(regexindent peers)++"\\)$'\n"
   ++ "let s:BLANK_LINE='^\\s*$'\n"
+  ++ "\" backward searching function used in the get_matching_line function \n"
   ++ "function! s:search_pair(begin, end, lnum, score)\n"
   ++ "   if a:lnum == 0\n"
   ++ "     return 0\n"
@@ -107,12 +114,15 @@ writeIndent stats =
   ++ "    endif\n"
   ++ "    return s:search_pair(a:begin, a:end, s:get_last_normal_line(a:lnum - 1),a:score)\n"
   ++ "endfunction\n\n"
+  ++ "\" if the last character of the line is a closing symbol, return the line of\n"
+  ++ "\" the opening symbol paired with it, otherwise return 0\n"
   ++ "function! s:get_matching_line(line, lnum)\n"
   ++ "    let lastchar = a:line[strlen(a:line) - 1]\n"
   ++ "    let line_without_lc = substitute(a:line,\".$\",\"\",\"\")\n"
   ++ writecas peers
   ++ "    return 0\n"
   ++ "endfunction\n\n"
+  ++ "\" return true if all the line is a comment\n"
   ++ "function! s:all_line_comment(lnum)\n"
   ++ "    let line = getline(a:lnum)\n"
   ++ "     if line =~ '\\s*"++ cl ++".*$' || line =~ '\\s*"++ cb1 ++").*$' || line =~ '.*"++ cb2 ++"\\s*$'\n"
@@ -123,19 +133,21 @@ writeIndent stats =
   ++ "   endif\n"
   ++ "   return 0\n"
   ++ "endfunction\n\n"
-  ++ "function! s:synthax_name(lnum, col)\n"
+  ++ "\" return the name of the syntax object at line lnum and column col\n"
+  ++ "function! s:syntax_name(lnum, col)\n"
   ++ "    return synIDattr(synID(a:lnum, a:col, 1), \"name\")\n"
   ++ "endfunction\n\n"
+  ++ "\" line without comment and undesirable spaces\n"
   ++ "function! s:get_line_trimmed(lnum)\n"
   ++ "   let line = getline(a:lnum)\n"
   ++ "   let line_len = strlen(line)\n"
   ++ "   if has('syntax_items')\n"
-  ++ "      if  s:synthax_name(a:lnum, line_len) =~ '"++ name ++"CommentLine' &&  s:synthax_name(1,line_len) !~ '"++ name++"CommentLine'\n"
+  ++ "      if  s:syntax_name(a:lnum, line_len) =~ '"++ name ++"CommentLine' &&  s:syntax_name(1,line_len) !~ '"++ name++"CommentLine'\n"
   ++ "         let min = 1\n"
   ++ "         let max = strlen(line)\n"
   ++ "         while min < max\n"
   ++ "            let col = (min + max) / 2\n"
-  ++ "            if  s:synthax_name(a:lnum, col) =~ '"++ name ++"CommentLine'\n"
+  ++ "            if  s:syntax_name(a:lnum, col) =~ '"++ name ++"CommentLine'\n"
   ++ "                let max = col\n"
   ++ "            else\n"
   ++ "               let min = col + 1\n"
@@ -158,12 +170,14 @@ writeIndent stats =
 
 
 -----------------------------------
+-- return the string composed of all the cases of the peers in argument in the function s:get_matching_line
 writecas:: [(String,String)]->String
 writecas (x:[])= casident (fst x) (snd x)
 writecas (x:xs) = 
    casident (fst x) (snd x)
    ++ writecas xs
 
+-- return the case of the peer "ouvrante" "fermante" in the function s:get_matching_line
 casident:: String ->String->String
 casident ouvrante fermante = 
   "if lastchar == '"++fermante++"'\n"

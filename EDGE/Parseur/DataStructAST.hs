@@ -1,5 +1,6 @@
 module Parseur.DataStructAST where
 
+-- data struct for the AST 
 data UExpr = UExpression String deriving (Show) 
 
 data BExpr = BExpression String String deriving (Show) 
